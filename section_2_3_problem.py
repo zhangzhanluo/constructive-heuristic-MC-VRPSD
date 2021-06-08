@@ -1,12 +1,19 @@
 import math
 import random
 from functools import reduce
-import numpy as np
 import scipy.stats as stats
 
 
 class MCVRPSDInstance:
     def __init__(self, n_customers=50, cv=0.1, product_mean_distribution='uniform', random_seed=None):
+        """
+        构建MCVRPSD实例。
+
+        :param n_customers: 顾客数量
+        :param cv: 方差因子，取0.1或0.3
+        :param product_mean_distribution: 顾客单个产品的需求均值，10-30均匀分布（uniform）还是0-1分布（01）
+        :param random_seed: 随机种子，控制案例生成中均值和地理位置的随机性
+        """
         self.n_customers = n_customers
         self.n_products = 3
 
@@ -67,21 +74,21 @@ class MCVRPSDInstance:
         """
         return sum([self.distances[r[i]][r[i + 1]] for i in range(len(r) - 1)])
 
-    def calculate_failure_probability(self, r):
+    def calculate_customers_failure_probability(self, r):
         """
         第2个客户失败的概率等于从第0个客户到当前才失败的概率+从第1个客户到当前就失败的概率。
         第3个客户失败的概率等于从第0个客户到当前才失败的概率+从第1个客户到当前才失败的概率+从第2个客户到当前就失败的概率。
         所以理论上，这并不是一个递增的过程！
 
         :param r: 路径
-        :return: 每个点失败的概率
+        :return: 每个顾客失败的概率
         """
         Pr = [0 for _ in range(len(r) - 1)]  # 记录第j个点失败的概率
-        Pr[0] = 1  # 边界条件，对于depot处就更新概率为1（失败的具体影响就是更新改点）
+        Pr[0] = 1  # 边界条件，对于depot处就更新概率为1（失败的具体影响就是更新该点）
         for i in range(1, len(Pr)):  # i -> 第i个顾客， 具体对应的编号为r[i]
             pr_j = []  # 记录从第j个点更新后到当前失败的概率
             for j in range(i):  # 从depot开始，到达i-1客户，求不同点更新对应的情况
-                if j == i - 1:  # 上面提到了，对于第i个客户前面一个客户更新，是不一样的，这里去区别主要还是无法公式的第一项（不存在随机性了）
+                if j == i - 1:  # 上面提到了，对于第i个客户前面一个客户更新，是不一样的，这里区别主要还是无法计算公式的第一项（不存在随机性了）
                     pr_j_1 = 1  # 第一部分概率，即到了i-1也不发生失败的概率，由于上一次才更新，因此这部分不存在随机性
                     # 到了第i个客户，累积的容量仍能满足要求的概率
                     customer_v_i_products_success_rate = [
@@ -91,7 +98,7 @@ class MCVRPSDInstance:
                     customer_v_i_success_rate = reduce(lambda x, y: x * y, customer_v_i_products_success_rate)
                     pr_j.append(pr_j_1 - customer_v_i_success_rate)
                 else:
-                    pr_j_m = []  # [第一部分概率，即到了i-1也不发生失败的概率，第二部分概率，到了第i次，仍然不会发生失败的概率]（第j次更新的前提下）
+                    pr_j_m = []  # [第一部分概率，即到了i-1也不发生失败的概率；第二部分概率，到了第i次，仍然不会发生失败的概率]（第j次更新的前提下）
                     for m in [i, i + 1]:
                         # 先求每种产品累积的期望需求
                         m_accumulate_demand = [sum(
@@ -110,13 +117,35 @@ class MCVRPSDInstance:
                         pr_j_m.append(reduce(lambda x, y: x * y, m_accumulate_success_rate))
                         # 到了i仍然不发生失败的概率-到了i-1不发生失败的概率 = 到了i发生失败的概率（第j次更新的前提下）
                     pr_j.append(pr_j_m[0] - pr_j_m[1])
-            Pr[i] = sum([pr_j[j] * Pr[j] for j in range(i)])
+            Pr[i] = sum([pr_j[j] * Pr[j] for j in range(i)])  # 全概率公式
         return Pr[1:]
+
+    def calculate_total_expected_length(self, r):
+        """
+        计算总期望路径（成本），等于计划成本加失败补救成本。
+
+        :param r: 路径
+        :return:总期望长度
+        """
+        Pr = self.calculate_customers_failure_probability(r)
+        # 由于Pr[0]代表第0个客户的概率，但是r[0]代表depot，因此两者的index错一位
+        return round(self.calculate_planned_length(r) + sum(
+            [self.distances[r[i + 1]][0] * 2 * Pr[i] for i in range(0, len(r) - 2)]), 2)
+
+    def check_distance_constrain(self, r):
+        """
+        检查路径的期望总长度是否小于L。
+
+        :param r: 路径
+        :return: 是否满足路径约束
+        """
+        return self.calculate_total_expected_length(r) <= self.L
 
 
 if __name__ == '__main__':
     instance = MCVRPSDInstance(n_customers=25, random_seed=None)
-    print(instance.calculate_failure_probability([0, 2, 4, 0]))
+    print(instance.calculate_customers_failure_probability([0, 2, 4, 0]))
+    print(instance.calculate_total_expected_length([0, 2, 4, 0]))
 
     # 检验结果
     # 对于第一个客户(2号）而言，三种产品满足要求的概率分别是
