@@ -47,7 +47,7 @@ if __name__ == '__main__':
     init_R = SCW(mcvrpsd)
     optimized_R = stochastic_2_opt(instance=mcvrpsd, R=init_R.copy())
     mcvrpsd.draw_routes(optimized_R,
-                        description='2-opt Optimized from SCW\nPlanned Cost: {}\nTotal Expected Cost: {}'.format(
+                        description='2-Opt optimizes results from SCW\nPlanned Cost: {}\nTotal Expected Cost: {}'.format(
                             mcvrpsd.calculate_routes_planned_length(optimized_R),
                             mcvrpsd.calculate_routes_total_expected_length(optimized_R)),
                         save_pic_suffix='SCW-2-opt')
