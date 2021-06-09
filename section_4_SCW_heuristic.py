@@ -1,7 +1,7 @@
 from section_2_3_problem import MCVRPSDInstance
 
 
-def SCW(instance: MCVRPSDInstance):
+def SCW(instance: MCVRPSDInstance, save_pic=False):
     """
     Similarly to the classical savings algorithm, the SCW heuristic starts from a trivial
     solution comprised of n round trips from the depot to each customer. Then it tries at each iteration to
@@ -9,6 +9,7 @@ def SCW(instance: MCVRPSDInstance):
     possible savings in the overall cost.
 
     :param instance: 案例
+    :param save_pic: 是否保存图片
     :return: 规划的路线的集合
     """
     R = []
@@ -58,12 +59,12 @@ def SCW(instance: MCVRPSDInstance):
             R.remove(route_records[best_merge_index][0])
             R.remove(route_records[best_merge_index][1])
             R.append(combination_list[best_merge_index])
-            instance.draw_routes(R, description='Planned Cost: {}\nTotal Expected Cost: {}'.format(
-                instance.calculate_routes_planned_length(R), instance.calculate_routes_total_expected_length(R)),
-                                 show_pic=False, save_pic_suffix='SCW {}'.format(R_version))
+            if save_pic:
+                instance.draw_routes(R, description='SCW {}\nPlanned Cost: {}\nTotal Expected Cost: {}'.format(R_version,                     instance.calculate_routes_planned_length(R), instance.calculate_routes_total_expected_length(R)),
+                                     show_pic=False, save_pic_suffix='SCW {}'.format(R_version))
             R_version += 1
 
 
 if __name__ == '__main__':
     mcvrpsd_instance = MCVRPSDInstance(n_customers=20, random_seed=0)
-    print(SCW(mcvrpsd_instance))
+    print(SCW(mcvrpsd_instance, save_pic=True))

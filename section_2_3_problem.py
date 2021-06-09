@@ -93,8 +93,9 @@ class MCVRPSDInstance:
 
     def calculate_customers_failure_probability(self, r):
         """
-        第2个客户失败的概率等于从第0个客户到当前才失败的概率+从第1个客户到当前就失败的概率。
-        第3个客户失败的概率等于从第0个客户到当前才失败的概率+从第1个客户到当前才失败的概率+从第2个客户到当前就失败的概率。
+        第2个客户失败的概率等于从第0个客户到当前才失败的概率*第0个客户失败概率+从第1个客户到当前就失败的概率*第1个客户失败概率。
+        第3个客户失败的概率等于从第0个客户到当前才失败的概率*第0个客户失败概率+从第1个客户到当前才失败的概率*第1个客户失败概率+
+        从第2个客户到当前就失败的概率*第2个客户失败概率。
         所以理论上，这并不是一个递增的过程！
 
         :param r: 路径
@@ -159,15 +160,6 @@ class MCVRPSDInstance:
         :return: 路线集合的总期望长度（成本）
         """
         return round(sum([self.calculate_total_expected_length(r) for r in R]), 3)
-
-    def check_distance_constrain(self, r):
-        """
-        检查路径的期望总长度是否小于L。
-
-        :param r: 路径
-        :return: 是否满足路径约束
-        """
-        return self.calculate_total_expected_length(r) <= self.L
 
     def draw_routes(self, R, description=None, show_pic=True, save_pic_suffix=None):
         """
