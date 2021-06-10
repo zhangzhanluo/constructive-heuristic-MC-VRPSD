@@ -9,7 +9,6 @@ def s_split(instance: MCVRPSDInstance, r: list):
     :param r: 路径
     :return:
     """
-    print(r)
     Q = 1e10
     Z = [Q for _ in range(len(r))]
     Z[0] = 0
@@ -34,7 +33,6 @@ def s_split(instance: MCVRPSDInstance, r: list):
     while i != 0:
         R.append([0] + r[B[i] + 1:i + 1] + [0])
         i = B[i]
-    print(R)
     return R
 
 
