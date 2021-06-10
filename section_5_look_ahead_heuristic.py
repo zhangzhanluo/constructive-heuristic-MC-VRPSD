@@ -38,7 +38,7 @@ def s_split(instance: MCVRPSDInstance, r: list):
     return R
 
 
-def NN(instance: MCVRPSDInstance):
+def NN(instance: MCVRPSDInstance, save_pic=True):
     r = [0]
     rest_customers = list(range(1, instance.n_customers + 1))
     while rest_customers:
@@ -52,22 +52,25 @@ def NN(instance: MCVRPSDInstance):
                     large_number = instance.distances[customer][last_customer]
         r.append(n)
         rest_customers.remove(n)
-        instance.draw_routes([r], description='NN Algorithm {}\nTotal planned length {}'.format(
+        if save_pic:
+            instance.draw_routes([r], description='NN Algorithm {}\nPlanned Cost: {}'.format(
+                len(r), instance.calculate_planned_length(r)),
+                                 show_pic=False, save_pic_suffix='NN Algorithm {}'.format(len(r)))
+    r.append(0)
+    if save_pic:
+        instance.draw_routes([r], description='NN Algorithm {}\nPlanned Cost: {}'.format(
             len(r), instance.calculate_planned_length(r)),
                              show_pic=False, save_pic_suffix='NN Algorithm {}'.format(len(r)))
-    r.append(0)
-    instance.draw_routes([r], description='NN Algorithm {}\nTotal planned length {}'.format(
-        len(r), instance.calculate_planned_length(r)),
-                         show_pic=False, save_pic_suffix='NN Algorithm {}'.format(len(r)))
-    return [r]
+    return r
 
 
-def NI(instance: MCVRPSDInstance):
+def NI(instance: MCVRPSDInstance, save_pic=True):
     farthest_customer = instance.distances[0].index(max(instance.distances[0]))
     r = [0, farthest_customer, 0]
-    instance.draw_routes([r], description='NI Algorithm {}\nTotal planned length {}'.format(
-        len(r), instance.calculate_planned_length(r)),
-                         show_pic=False, save_pic_suffix='NI Algorithm {}'.format(len(r)))
+    if save_pic:
+        instance.draw_routes([r], description='NI Algorithm {}\nPlanned Cost: {}'.format(
+            len(r), instance.calculate_planned_length(r)),
+                             show_pic=False, save_pic_suffix='NI Algorithm {}'.format(len(r)))
     rest_customers = list(range(1, instance.n_customers + 1))
     rest_customers.remove(farthest_customer)
     while rest_customers:
@@ -85,13 +88,27 @@ def NI(instance: MCVRPSDInstance):
         best_insertion_position = new_lengths_insertion[new_lengths.index(min(new_lengths))]
         r.insert(best_insertion_position, best_customer)
         rest_customers.remove(best_customer)
-        instance.draw_routes([r], description='NI Algorithm {}\nTotal planned length {}'.format(
-            len(r), instance.calculate_planned_length(r)),
-                             show_pic=False, save_pic_suffix='NI Algorithm {}'.format(len(r)))
-    return [r]
+        if save_pic:
+            instance.draw_routes([r], description='NI Algorithm {}\nPlanned Cost: {}'.format(
+                len(r), instance.calculate_planned_length(r)),
+                                 show_pic=False, save_pic_suffix='NI Algorithm {}'.format(len(r)))
+    return r
 
 
 if __name__ == '__main__':
     mcvrpsd = MCVRPSDInstance(n_customers=20, random_seed=0)
-    NN(mcvrpsd)
-    NI(mcvrpsd)
+    r_nn = NN(mcvrpsd)
+    R_nn_split = s_split(mcvrpsd, r_nn)
+    mcvrpsd.draw_routes(R_nn_split,
+                        description='NN Algorithm S-Split\nPlanned Cost: {}\nTotal Expected Cost: {}'.format(
+                            mcvrpsd.calculate_routes_planned_length(R_nn_split),
+                            mcvrpsd.calculate_routes_total_expected_length(R_nn_split)),
+                        show_pic=False, save_pic_suffix='NN Algorithm S-Split')
+
+    r_ni = NI(mcvrpsd)
+    R_ni_split = s_split(mcvrpsd, r_ni)
+    mcvrpsd.draw_routes(R_ni_split,
+                        description='NI Algorithm S-Split\nPlanned Cost: {}\nTotal Expected Cost: {}'.format(
+                            mcvrpsd.calculate_routes_planned_length(R_ni_split),
+                            mcvrpsd.calculate_routes_total_expected_length(R_ni_split)),
+                        show_pic=False, save_pic_suffix='NI Algorithm S-Split')
