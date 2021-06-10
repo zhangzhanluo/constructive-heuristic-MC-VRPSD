@@ -80,7 +80,7 @@ class MCVRPSDInstance:
         :param r: 路径
         :return: 计划路径长度
         """
-        return sum([self.distances[r[i]][r[i + 1]] for i in range(len(r) - 1)])
+        return round(sum([self.distances[r[i]][r[i + 1]] for i in range(len(r) - 1)]), 3)
 
     def calculate_routes_planned_length(self, R):
         """
@@ -165,14 +165,12 @@ class MCVRPSDInstance:
         """
         对结果进行可视化。
 
-        :param R: 路线或路线的集合
+        :param R: 路线的集合
         :param description: 一些描述性的文字，会被打印在左上角
         :param show_pic: show
         :param save_pic_suffix: 保存图片名城的后缀，None的话不会保存图片
         :return: 无
         """
-        if R[0] is int:
-            R = [R]
         g = nx.DiGraph()
         g.add_nodes_from(range(self.n_customers + 1))
         for node in g.nodes:
@@ -188,6 +186,8 @@ class MCVRPSDInstance:
         pos = {i: self.depot_customers_position[i] for i in g.nodes}
         plt.figure(figsize=[7, 7])
         nx.draw(g, pos, with_labels=True, font_color='w')
+        plt.xlim([-5, 105])
+        plt.ylim([-5, 105])
         plt.text(1, 0, 'https://github.com/zhangzhanluo/constructive-heuristic-MC-VRPSD', ha='right', va='bottom',
                  fontsize=6, transform=plt.gca().transAxes)
         plt.text(0.01, 0.99, self.name, ha='left', va='top', fontsize=8, transform=plt.gca().transAxes)

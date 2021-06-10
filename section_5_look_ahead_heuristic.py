@@ -28,15 +28,70 @@ def s_split(instance: MCVRPSDInstance, r: list):
                     B[j] = i
             else:
                 break
-    i = len(r)-1
-    R = [[0]+r[B[i]+1:]]
+    i = len(r) - 1
+    R = [[0] + r[B[i] + 1:]]
     i = B[i]
     while i != 0:
-        R.append([0]+r[B[i]+1:i+1]+[0])
+        R.append([0] + r[B[i] + 1:i + 1] + [0])
         i = B[i]
     print(R)
     return R
 
 
+def NN(instance: MCVRPSDInstance):
+    r = [0]
+    rest_customers = list(range(1, instance.n_customers + 1))
+    while rest_customers:
+        large_number = 1e10
+        n = -1
+        last_customer = r[-1]
+        for customer in rest_customers:
+            if customer not in r and customer != last_customer:
+                if instance.distances[customer][last_customer] < large_number:
+                    n = customer
+                    large_number = instance.distances[customer][last_customer]
+        r.append(n)
+        rest_customers.remove(n)
+        instance.draw_routes([r], description='NN Algorithm {}\nTotal planned length {}'.format(
+            len(r), instance.calculate_planned_length(r)),
+                             show_pic=False, save_pic_suffix='NN Algorithm {}'.format(len(r)))
+    r.append(0)
+    instance.draw_routes([r], description='NN Algorithm {}\nTotal planned length {}'.format(
+        len(r), instance.calculate_planned_length(r)),
+                         show_pic=False, save_pic_suffix='NN Algorithm {}'.format(len(r)))
+    return [r]
+
+
+def NI(instance: MCVRPSDInstance):
+    farthest_customer = instance.distances[0].index(max(instance.distances[0]))
+    r = [0, farthest_customer, 0]
+    instance.draw_routes([r], description='NI Algorithm {}\nTotal planned length {}'.format(
+        len(r), instance.calculate_planned_length(r)),
+                         show_pic=False, save_pic_suffix='NI Algorithm {}'.format(len(r)))
+    rest_customers = list(range(1, instance.n_customers + 1))
+    rest_customers.remove(farthest_customer)
+    while rest_customers:
+        new_lengths = []
+        new_lengths_insertion = []
+        for customer in rest_customers:
+            all_possible_insertion = []
+            for i in range(1, len(r)):
+                new_r = r.copy()
+                new_r.insert(i, customer)
+                all_possible_insertion.append(instance.calculate_planned_length(new_r))
+            new_lengths.append(min(all_possible_insertion))
+            new_lengths_insertion.append(all_possible_insertion.index(min(all_possible_insertion)) + 1)
+        best_customer = rest_customers[new_lengths.index(min(new_lengths))]
+        best_insertion_position = new_lengths_insertion[new_lengths.index(min(new_lengths))]
+        r.insert(best_insertion_position, best_customer)
+        rest_customers.remove(best_customer)
+        instance.draw_routes([r], description='NI Algorithm {}\nTotal planned length {}'.format(
+            len(r), instance.calculate_planned_length(r)),
+                             show_pic=False, save_pic_suffix='NI Algorithm {}'.format(len(r)))
+    return [r]
+
+
 if __name__ == '__main__':
-    pass
+    mcvrpsd = MCVRPSDInstance(n_customers=20, random_seed=0)
+    NN(mcvrpsd)
+    NI(mcvrpsd)
