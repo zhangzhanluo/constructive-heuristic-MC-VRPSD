@@ -39,7 +39,6 @@ def stochastic_2_opt(instance: MCVRPSDInstance, R: list, result_from='SCW'):
                             R.remove(r)
                             R.remove(r_apo)
                             R.extend(R_apo_3)
-                            R = stochastic_2_opt(instance, R)
                             t_label = time.time()
                             mcvrpsd.draw_routes(R,
                                                 description='2-Opt optimizes results from {}\nTime: {}\n'
@@ -48,6 +47,7 @@ def stochastic_2_opt(instance: MCVRPSDInstance, R: list, result_from='SCW'):
                                                          mcvrpsd.calculate_routes_planned_length(R),
                                                          mcvrpsd.calculate_routes_total_expected_length(R)),
                                                 save_pic_suffix='2-opt-{}-{}'.format(result_from, t_label))
+                            R = stochastic_2_opt(instance, R)
                             return R
     return R
 
